@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TodoList - Gestione Attività</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📝 TodoList</h1>
+            <p class="subtitle">Gestisci le tue attività in modo semplice</p>
+        </header>
+
+        <div class="input-section">
+            <input 
+                type="text" 
+                id="todoInput" 
+                class="todo-input" 
+                placeholder="Aggiungi una nuova attività..."
+                autocomplete="off"
+            >
+            <button id="addBtn" class="btn-add">➕ Aggiungi</button>
+        </div>
+
+        <div class="filter-section">
+            <button class="filter-btn active" data-filter="all">Tutte</button>
+            <button class="filter-btn" data-filter="active">Attive</button>
+            <button class="filter-btn" data-filter="completed">Completate</button>
+        </div>
+
+        <div class="stats-section">
+            <div class="stat">
+                <span class="stat-label">Totali:</span>
+                <span class="stat-value" id="totalCount">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Completate:</span>
+                <span class="stat-value" id="completedCount">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Rimaste:</span>
+                <span class="stat-value" id="remainingCount">0</span>
+            </div>
+        </div>
+
+        <div class="list-section">
+            <ul id="todoList" class="todo-list"></ul>
+            <div id="emptyState" class="empty-state">
+                <span class="empty-icon">✨</span>
+                <p>Nessuna attività. Inizia ad aggiungerne una!</p>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button id="clearBtn" class="btn-clear">🗑️ Elimina Completate</button>
+            <button id="exportBtn" class="btn-export">📥 Esporta</button>
+            <button id="importBtn" class="btn-import">📤 Importa</button>
+            <input type="file" id="fileInput" class="file-input" accept=".json" style="display: none;">
+        </div>
+    </div>
+
+    <!-- Modal di Editing -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Modifica Attività</h2>
+            <input type="text" id="editInput" class="edit-input" placeholder="Modifica il testo...">
+            <div class="modal-buttons">
+                <button id="saveBtnModal" class="btn-save">Salva</button>
+                <button id="cancelBtnModal" class="btn-cancel">Annulla</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
