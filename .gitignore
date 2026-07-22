@@ -1,0 +1,24 @@
+# Firebase config with keys
+firebase-config.js
+
+# Node modules
+node_modules/
+package-lock.json
+yarn.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbsdb
+
+# Logs
+*.log
+
+# Build
+dist/
+build/

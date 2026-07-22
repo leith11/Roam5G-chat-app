@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roam5G - Chat e Chiamate</title>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- SUONERIA PREDEFINITA DI SISTEMA -->
+    <audio id="ringtone" loop src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"></audio>
+
+    <!-- NOTIFICA POPUP CHIAMATA IN ARRIVO -->
+    <div id="incoming-call-banner">
+        <div>
+            <div style="font-size: 12px; color: #00a884; font-weight: bold;">CHIAMATA VOCALE IN ARRIVO</div>
+            <div id="bannerCallerName" style="font-size: 16px; font-weight: bold; color: #fff;">Contatto</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="acceptIncomingCall()" style="background:#00a884; color:#000; border:none; padding:8px 14px; border-radius:6px; font-weight:bold; cursor:pointer;">Rispondi</button>
+            <button onclick="rejectIncomingCall()" style="background:#ea0038; color:#fff; border:none; padding:8px 14px; border-radius:6px; font-weight:bold; cursor:pointer;">Rifiuta</button>
+        </div>
+    </div>
+
+    <!-- HEADER SUPERIORE -->
+    <header>
+        <div class="header-title">
+            <img id="headerPic" class="header-avatar" src="" style="display: none;" alt="">
+            <span id="headerTitleText">Roam5G</span>
+        </div>
+        <div>
+            <button onclick="openProfileModal()" style="background:transparent; border:none; color:#8696a0; font-size:18px; cursor:pointer;">⚙️</button>
+        </div>
+    </header>
+
+    <!-- STEP 1: VERIFICA TELEFONO SMS -->
+    <div id="auth-screen" class="screen center-screen">
+        <h2>Verifica Account</h2>
+        <p>Inserisci il tuo numero per ricevere l'SMS di accesso.</p>
+        <div class="input-group">
+            <select id="myPrefix">
+                <option value="+33">🇫🇷 +33</option>
+                <option value="+212">🇲🇦 +212</option>
+                <option value="+39">🇮🇹 +39</option>
+                <option value="+34">🇪🇸 +34</option>
+            </select>
+            <input type="tel" id="myPhone" placeholder="Tuo numero">
+        </div>
+        <button class="action-btn" onclick="sendOTP()">Invia SMS</button>
+        <div id="recaptcha-container" style="margin-top: 15px;"></div>
+    </div>
+
+    <!-- STEP 2: CONFERMA CODICE SMS -->
+    <div id="verify-screen" class="screen center-screen" style="display: none;">
+        <h2>Conferma Codice</h2>
+        <p>Digita il codice a 6 cifre ricevuto via SMS.</p>
+        <input type="text" id="otpCode" placeholder="123456" maxlength="6" style="width: 200px; font-size: 20px; letter-spacing: 4px;">
+        <button class="action-btn" onclick="verifyOTP()">Verifica</button>
+    </div>
+
+    <!-- MODIFICA PROFILO -->
+    <div id="profile-screen" class="screen center-screen" style="display: none;">
+        <h2>Il tuo Profilo</h2>
+        <p>Personalizza il tuo nome e la tua foto profilo.</p>
+        <div class="input-group"><input type="text" id="profileNameInput" placeholder="Tuo Nome"></div>
+        <div class="input-group"><input type="text" id="profilePicInput" placeholder="URL Foto (https://...)"></div>
+        <button class="action-btn" onclick="saveProfile()">Salva</button>
+    </div>
+
+    <!-- HOME: LISTA CHAT -->
+    <div id="home-screen" class="screen" style="display: none;">
+        <div id="chatsList">
+            <div style="text-align: center; color: #8696a0; padding: 40px 20px;">
+                Nessuna conversazione ancora.<br>Tocca il pulsante <b>+</b> in basso per iniziare!
+            </div>
+        </div>
+        <button class="fab-btn" onclick="openTargetModal()">+</button>
+    </div>
+
+    <!-- NUOVA CHAT -->
+    <div id="target-screen" class="screen center-screen" style="display: none;">
+        <h2>Nuovo Messaggio</h2>
+        <p>Inserisci il numero di telefono del contatto.</p>
+        <div class="input-group">
+            <select id="targetPrefix">
+                <option value="+33">🇫🇷 +33</option>
+                <option value="+212">🇲🇦 +212</option>
+                <option value="+39">🇮🇹 +39</option>
+                <option value="+34">🇪🇸 +34</option>
+            </select>
+            <input type="tel" id="targetPhone" placeholder="Numero contatto">
+        </div>
+        <button class="action-btn" onclick="startChatRoom()">Avvia Chat</button>
+    </div>
+
+    <!-- CONVERSAZIONE CHAT APERTA -->
+    <div id="chat-screen" class="screen" style="display: none;">
+        <div style="background-color: #111b21; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222d34;">
+            <span id="chatHeaderName" style="font-weight: bold; color: #00a884;">Chat</span>
+            <button onclick="startCall()" style="background: transparent; border: 1px solid #00a884; color: #00a884; padding: 6px 12px; border-radius: 6px; cursor: pointer;">📞 Chiama</button>
+        </div>
+        <div class="chat-container" id="chat"></div>
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="Scrivi un messaggio...">
+            <button onclick="sendMessage()">Invia</button>
+        </div>
+    </div>
+
+    <!-- SCHERMATA CHIAMATA IN CORSO -->
+    <div id="call-screen" class="screen center-screen" style="display: none; background-color: #0b141a;">
+        <h2 id="callTargetTitle">Chiamata</h2>
+        <p id="callTargetPhone" style="color: #8696a0;"></p>
+        <div id="callStatusText" style="font-size: 18px; color: #00a884; margin: 20px 0;">Connessione in corso...</div>
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <button id="acceptCallBtn" onclick="acceptCall()" style="display:none; background:#00a884; color:#000; border:none; padding:12px 25px; border-radius:8px; font-weight:bold; cursor:pointer;">Rispondi</button>
+            <button onclick="endCall()" style="background:#ea0038; color:#fff; border:none; padding:12px 25px; border-radius:8px; font-weight:bold; cursor:pointer;">Riattacca</button>
+        </div>
+    </div>
+
+    <!-- BARRA DI NAVIGAZIONE IN BASSO -->
+    <nav class="bottom-bar" id="bottomNav" style="display: none;">
+        <div class="nav-item active" onclick="showHomeScreen()">
+            <span class="nav-icon">💬</span>
+            <span>Chat</span>
+        </div>
+        <div class="nav-item" onclick="showCallLog()">
+            <span class="nav-icon">📞</span>
+            <span>Chiamate</span>
+        </div>
+    </nav>
+
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
